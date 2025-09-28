@@ -10,6 +10,8 @@ import (
 	"github.com/bwmarrin/discordgo"
 )
 
+const COMMAND_PREFIX = "!"
+
 var resetAllConfirm = make(map[string]time.Time)
 
 // 優先度チェック
@@ -41,29 +43,29 @@ func MessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 	content := strings.TrimSpace(m.ContentWithMentionsReplaced())
 
 	switch {
-	case strings.HasPrefix(content, "!add "):
+	case strings.HasPrefix(content, fmt.Sprintf("%sadd ", COMMAND_PREFIX)):
 		HandleAdd(s, m, content)
-	case strings.HasPrefix(content, "!list"):
+	case strings.HasPrefix(content, fmt.Sprintf("%slist", COMMAND_PREFIX)):
 		HandleList(s, m)
-	case strings.HasPrefix(content, "!done "):
+	case strings.HasPrefix(content, fmt.Sprintf("%sdone ", COMMAND_PREFIX)):
 		HandleComplete(s, m, content)
-	case strings.HasPrefix(content, "!delete"):
+	case strings.HasPrefix(content, fmt.Sprintf("%sdelete", COMMAND_PREFIX)):
 		HandleDelete(s, m, content)
-	case strings.HasPrefix(content, "!chat "):
+	case strings.HasPrefix(content, fmt.Sprintf("%schat ", COMMAND_PREFIX)):
 		HandleChat(s, m, content)
-	case strings.HasPrefix(content, "!reset"):
+	case strings.HasPrefix(content, fmt.Sprintf("%sreset", COMMAND_PREFIX)):
 		HandleReset(s, m)
-	case strings.HasPrefix(content, "!confirm reset"):
+	case strings.HasPrefix(content, fmt.Sprintf("%sconfirm reset", COMMAND_PREFIX)):
 		HandleConfirm(s, m)
-	case strings.HasPrefix(content, "!edit "):
+	case strings.HasPrefix(content, fmt.Sprintf("%sedit ", COMMAND_PREFIX)):
 		HandleEdit(s, m, content)
-	case strings.HasPrefix(content, "!help"):
+	case strings.HasPrefix(content, fmt.Sprintf("%shelp", COMMAND_PREFIX)):
 		HandleHelp(s, m)
 	}
 }
 
 func HandleAdd(s *discordgo.Session, m *discordgo.MessageCreate, content string) {
-	args := strings.Fields(strings.TrimPrefix(content, "!add"))
+	args := strings.Fields(strings.TrimPrefix(content, fmt.Sprintf("%sadd", COMMAND_PREFIX)))
 	if len(args) == 0 {
 		replyToUser(s, m.ChannelID, m.Author.ID, "```⚠️ タスク内容を追加してください```")
 		return
@@ -116,7 +118,7 @@ func HandleList(s *discordgo.Session, m *discordgo.MessageCreate) {
 }
 
 func HandleComplete(s *discordgo.Session, m *discordgo.MessageCreate, content string) {
-	arg := strings.TrimPrefix(content, "!done ")
+	arg := strings.TrimPrefix(content, fmt.Sprintf("%sdone ", COMMAND_PREFIX))
 	DoneTaskNumber, err := strconv.Atoi(arg)
 	if err != nil {
 		replyToUser(s, m.ChannelID, m.Author.ID, "```❌ 数字を指定してください```")
@@ -154,7 +156,7 @@ func HandleComplete(s *discordgo.Session, m *discordgo.MessageCreate, content st
 }
 
 func HandleDelete(s *discordgo.Session, m *discordgo.MessageCreate, content string) {
-	arg := strings.TrimPrefix(content, "!delete ")
+	arg := strings.TrimPrefix(content, fmt.Sprintf("%sdelete ", COMMAND_PREFIX))
 	DeleteNumber, err := strconv.Atoi(arg)
 	if err != nil {
 		replyToUser(s, m.ChannelID, m.Author.ID, "```❌ 数字を指定してください```")
@@ -169,7 +171,7 @@ func HandleDelete(s *discordgo.Session, m *discordgo.MessageCreate, content stri
 }
 
 func HandleChat(s *discordgo.Session, m *discordgo.MessageCreate, content string) {
-	arg := strings.TrimPrefix(content, "!chat ")
+	arg := strings.TrimPrefix(content, fmt.Sprintf("%schat ", COMMAND_PREFIX))
 	if len(strings.TrimSpace(arg)) == 0 {
 		replyToUser(s, m.ChannelID, m.Author.ID, "```❌ メッセージを入力してください```")
 		return
@@ -187,7 +189,7 @@ func HandleChat(s *discordgo.Session, m *discordgo.MessageCreate, content string
 }
 
 func HandleReset(s *discordgo.Session, m *discordgo.MessageCreate) {
-	if strings.HasPrefix(m.Content, "!reset all") {
+	if strings.HasPrefix(m.Content, fmt.Sprintf("%sreset all", COMMAND_PREFIX)) {
 		resetAllConfirm[m.Author.ID] = time.Now().Add(10 * time.Minute)
 		replyToUser(s, m.ChannelID, m.Author.ID,
 			"```⚠️ 本当に全タスク（過去含む）を削除しますか？\n削除するには '!confirm reset' と入力してください。（10分以内）```")
@@ -220,7 +222,7 @@ func HandleConfirm(s *discordgo.Session, m *discordgo.MessageCreate) {
 }
 
 func HandleEdit(s *discordgo.Session, m *discordgo.MessageCreate, content string) {
-	arg := strings.TrimPrefix(content, "!edit ")
+	arg := strings.TrimPrefix(content, fmt.Sprintf("%sedit ", COMMAND_PREFIX))
 	fields := strings.Fields(arg)
 	if len(fields) < 2 {
 		replyToUser(s, m.ChannelID, m.Author.ID, fmt.Sprintf("```⚠️ コマンドの形式が正しくありません。\n例: `!edit 1 <title/優先度>` or `!edit 1 title 優先度` ```"))
